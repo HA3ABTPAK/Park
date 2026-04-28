@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>Теннис-календарь — запись на корт</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            margin: 0;
+            padding: 12px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        body.light {
+            background-color: #f5f7fb;
+            color: #1e293b;
+        }
+
+        body.light .card {
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        body.light .calendar-header,
+        body.light .time-slot-header {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        body.light .cell-available {
+            background-color: #bbf7d0;
+            color: #14532d;
+        }
+
+        body.light .cell-unavailable {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        body.light .cell-booked {
+            background-color: #bfdbfe;
+            color: #1e3a8a;
+        }
+
+        body.dark {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        body.dark .card {
+            background-color: #1e293b;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        body.dark .calendar-header,
+        body.dark .time-slot-header {
+            background-color: #334155;
+            color: #f1f5f9;
+        }
+
+        body.dark .cell-available {
+            background-color: #166534;
+            color: #dcfce7;
+        }
+
+        body.dark .cell-unavailable {
+            background-color: #7f1a1a;
+            color: #fecaca;
+        }
+
+        body.dark .cell-booked {
+            background-color: #1e3a8a;
+            color: #bfdbfe;
+        }
+
+        .card {
+            border-radius: 20px;
+            padding: 14px;
+            margin-bottom: 16px;
+            transition: background-color 0.2s;
+        }
+
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button {
+            background: #3b82f6;
+            border: none;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.1s;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .theme-toggle {
+            background: #475569;
+        }
+
+        .admin-toggle {
+            background: #8b5cf6;
+        }
+
+        .admin-panel {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .admin-panel.open {
+            display: flex;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            border-top: 1px solid #cbd5e1;
+            padding-top: 12px;
+        }
+
+        .setting-group label {
+            font-weight: 600;
+            min-width: 100px;
+            font-size: 0.85rem;
+        }
+
+        select, input {
+            padding: 6px 10px;
+            border-radius: 14px;
+            border: 1px solid #94a3b8;
+            background: transparent;
+            font-size: 0.85rem;
+        }
+
+        .day-config {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .day-card {
+            background: #33415530;
+            padding: 8px 10px;
+            border-radius: 14px;
+            min-width: 140px;
+        }
+
+        .day-card strong {
+            font-size: 0.8rem;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .day-card label {
+            font-size: 0.7rem;
+            min-width: auto;
+        }
+
+        .day-card input[type="time"] {
+            font-size: 0.75rem;
+            padding: 5px 8px;
+            width: 95px;
+        }
+
+        .tech-windows-group {
+            width: 100%;
+        }
+
+        .tech-window-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            margin: 6px 0;
+            padding: 6px 8px;
+            background: #33415520;
+            border-radius: 12px;
+        }
+
+        .tech-input-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .tech-input-group input {
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .calendar-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 75px repeat(7, minmax(90px, 1fr));
+            border-radius: 14px;
+            overflow: hidden;
+            font-size: 12px;
+        }
+
+        .time-slot-header {
+            grid-column: 1;
+            background-color: #e2e8f0;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 4px;
+            border-bottom: 1px solid #94a3b8;
+            border-right: 1px solid #94a3b8;
+            font-size: 12px;
+        }
+
+        .calendar-header {
+            background-color: #e2e8f0;
+            text-align: center;
+            font-weight: bold;
+            padding: 10px 4px;
+            border-bottom: 1px solid #94a3b8;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .cell {
+            min-height: 52px;
+            padding: 8px 3px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            border-bottom: 1px solid #33415530;
+            border-right: 1px solid #33415530;
+            cursor: pointer;
+            transition: 0.05s linear;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            touch-action: manipulation;
+        }
+
+        .cell:active {
+            opacity: 0.7;
+        }
+
+        .time-label {
+            grid-column: 1;
+            background-color: #f8fafc30;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-size: 13px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            background: #ffffff30;
+            font-size: 13px;
+        }
+
+        .cancel-btn {
+            background: #ef4444;
+            padding: 5px 14px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 8px;
+            }
+            .calendar-grid {
+                grid-template-columns: 65px repeat(7, minmax(80px, 1fr));
+            }
+            .cell {
+                font-size: 11px;
+                min-height: 48px;
+                padding: 6px 2px;
+            }
+            .calendar-header {
+                font-size: 10px;
+            }
+            .time-slot-header {
+                font-size: 10px;
+                padding: 8px 2px;
+            }
+            .day-card {
+                min-width: 130px;
+            }
+            .day-card input[type="time"] {
+                width: 88px;
+                font-size: 0.7rem;
+            }
+            .toast-msg {
+                white-space: normal;
+                text-align: center;
+                max-width: 90%;
+            }
+            .tech-input-group input {
+                min-width: 85px;
+            }
+        }
+    </style>
+	<link rel="manifest" href="manifest.json">
+	<link rel="apple-touch-icon" href="icons/icon-192.png">
+	<meta name="theme-color" content="#3b82f6">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="light">
+    <div class="card">
+        <div class="header-bar">
+            <h2>🎾 Запись на теннис 🎾</h2>
+            <div style="display: flex; gap: 8px;">
+                <button class="theme-toggle" id="themeToggle">🌙 Темная</button>
+                <button class="admin-toggle" id="adminToggle">⚙️ Настройки</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Админ-панель -->
+    <div class="card admin-panel" id="adminPanel">
+        <h3 style="margin-top:0;">🔧 Настройки корта</h3>
+        
+        <div class="setting-group">
+            <label>⚡ Дискретность:</label>
+            <select id="stepSelect">
+                <option value="30">30 минут</option>
+                <option value="60" selected>1 час</option>
+            </select>
+            
+            <label>⏱️ Длительность:</label>
+            <select id="durationSelect">
+                <option value="30">30 мин</option>
+                <option value="60" selected>1 час</option>
+                <option value="120">2 часа</option>
+            </select>
+        </div>
+
+        <div class="setting-group" style="flex-direction: column; align-items: flex-start;">
+            <label>📅 Доступность дней</label>
+            <div class="day-config" id="daysConfigContainer"></div>
+        </div>
+
+        <div class="setting-group" style="flex-direction: column; align-items: flex-start;">
+            <label>🛠️ Технические окна:</label>
+            <div class="tech-windows-group" id="techWindowsList"></div>
+            <div class="tech-input-group">
+                <input type="text" id="newTechDay" placeholder="ПН, ВТ, СР..." size="6" style="width: 80px;">
+                <input type="time" id="newTechStart" value="12:00" style="width: 110px;">
+                <input type="time" id="newTechEnd" value="13:00" style="width: 110px;">
+                <button id="addTechWindow" style="background: #10b981; padding: 6px 12px;">➕ Добавить</button>
+            </div>
+            <small>Формат дня: ПН, ВТ, СР, ЧТ, ПТ, СБ, ВС</small>
+        </div>
+        <button id="refreshCalendarBtn" style="background: #10b981;">🔄 Обновить календарь</button>
+    </div>
+
+    <!-- Календарь -->
+    <div class="card">
+        <div style="margin-bottom: 10px; font-size: 12px;">🎾 Нажми на 🟢 зеленую ячейку для записи | 🔵 синюю — для отмены</div>
+        <div class="calendar-wrapper" id="calendarWrapper"></div>
+    </div>
+
+    <!-- Мои записи -->
+    <div class="card" id="myBookingsCard">
+        <h3 style="font-size:1.1rem;">📋 Мои записи</h3>
+        <div id="myBookingsList">Нет активных записей</div>
+    </div>
+
+    <div id="toastMsg" class="toast-msg">✅ Готово!</div>
+
+    <script>
+        // ---------- СОСТОЯНИЕ ----------
+        const daysOfWeek = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+        const dayNamesFull = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        
+        let daySettings = {
+            0: { active: false, greenStart: "10:00", greenEnd: "18:00" },
+            1: { active: true,  greenStart: "09:00", greenEnd: "21:00" },
+            2: { active: true,  greenStart: "09:00", greenEnd: "21:00" },
+            3: { active: true,  greenStart: "09:00", greenEnd: "21:00" },
+            4: { active: true,  greenStart: "09:00", greenEnd: "21:00" },
+            5: { active: true,  greenStart: "09:00", greenEnd: "20:00" },
+            6: { active: false, greenStart: "12:00", greenEnd: "16:00" }
+        };
+
+        let techWindows = [];
+        let bookings = [];
+
+        let stepMinutes = 60;
+        let defaultDuration = 60;
+
+        // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+        function timeToMinutes(timeStr) {
+            let [h, m] = timeStr.split(':').map(Number);
+            return h * 60 + (m || 0);
+        }
+
+        function minutesToTime(min) {
+            let h = Math.floor(min / 60);
+            let m = min % 60;
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+        }
+
+        function getNext7Days() {
+            let today = new Date();
+            let days = [];
+            for (let i = 0; i < 7; i++) {
+                let d = new Date();
+                d.setDate(today.getDate() + i);
+                let dayIndex = d.getDay();
+                let fullDateStr = d.toISOString().slice(0,10);
+                days.push({
+                    date: d,
+                    dayIndex: dayIndex,
+                    dayName: daysOfWeek[dayIndex],
+                    dateStr: fullDateStr,
+                    display: `${daysOfWeek[dayIndex]} ${d.getDate()}/${d.getMonth()+1}`
+                });
+            }
+            return days;
+        }
+
+        function isInGreenZone(dayIndex, minuteOfDay) {
+            let sett = daySettings[dayIndex];
+            if (!sett.active) return false;
+            let startMin = timeToMinutes(sett.greenStart);
+            let endMin = timeToMinutes(sett.greenEnd);
+            return (minuteOfDay >= startMin && minuteOfDay < endMin);
+        }
+
+        function isTechWindow(dayIndex, startMin, endMin) {
+            return techWindows.some(win => {
+                if (win.dayIndex !== dayIndex) return false;
+                return (startMin < win.endMin && endMin > win.startMin);
+            });
+        }
+
+        function isBooked(dayIndex, dateStr, startMin, endMin, excludeBookingId = null) {
+            return bookings.some(b => 
+                (excludeBookingId === null || b.id !== excludeBookingId) &&
+                b.dayIndex === dayIndex && 
+                b.dateStr === dateStr && 
+                b.startMin < endMin && 
+                b.endMin > startMin
+            );
+        }
+
+        function getAllSlotsForDay(dateObj, dayIndex, dateStr) {
+            let slots = [];
+            for (let t = 0; t < 24*60; t += stepMinutes) {
+                let slotStart = t;
+                let slotEnd = Math.min(t + stepMinutes, 24*60);
+                let isGreenZone = isInGreenZone(dayIndex, slotStart);
+                let isTech = isTechWindow(dayIndex, slotStart, slotEnd);
+                let isAlreadyBooked = isBooked(dayIndex, dateStr, slotStart, slotEnd);
+                
+                let status = 'unavailable';
+                if (!daySettings[dayIndex].active) status = 'unavailable';
+                else if (isAlreadyBooked) status = 'booked';
+                else if (isTech) status = 'unavailable';
+                else if (isGreenZone) status = 'available';
+                else status = 'unavailable';
+                
+                slots.push({
+                    startMin: slotStart,
+                    endMin: slotEnd,
+                    status: status,
+                    startTime: minutesToTime(slotStart),
+                    endTime: minutesToTime(slotEnd)
+                });
+            }
+            return slots;
+        }
+
+        function findBookingBySlot(dayIndex, dateStr, startMin) {
+            return bookings.find(b => 
+                b.dayIndex === dayIndex && 
+                b.dateStr === dateStr && 
+                b.startMin === startMin
+            );
+        }
+
+        function cancelBookingById(bookingId) {
+            let booking = bookings.find(b => b.id == bookingId);
+            if (!booking) return false;
+            if (confirm(`❌ Отменить запись на теннис?\n📅 ${booking.dateStr}\n⏰ ${booking.startTime} — ${booking.endTime}`)) {
+                bookings = bookings.filter(b => b.id != bookingId);
+                showToast("❌ Запись отменена");
+                renderCalendar();
+                return true;
+            }
+            return false;
+        }
+
+        // Обработка клика по ячейке
+        function handleCellClick(e) {
+            const cell = e.currentTarget;
+            const status = cell.dataset.status;
+            const dayIdx = parseInt(cell.dataset.dayidx);
+            const dateStr = cell.dataset.datestr;
+            const startMin = parseInt(cell.dataset.startmin);
+            const slotTime = cell.dataset.slotTime;
+            
+            const daysList = getNext7Days();
+            const targetDayObj = daysList.find(d => d.dateStr === dateStr);
+            if (!targetDayObj) return;
+            
+            // Если это синяя ячейка (записаны) - предлагаем отменить
+            if (status === 'booked') {
+                const booking = findBookingBySlot(dayIdx, dateStr, startMin);
+                if (booking) {
+                    cancelBookingById(booking.id);
+                } else {
+                    showToast("Не удалось найти запись");
+                }
+                return;
+            }
+            
+            // Если это зеленая ячейка - запись на ЭТОТ слот
+            if (status === 'available') {
+                // Предлагаем записаться именно на этот слот
+                let endMinutes = startMin + defaultDuration;
+                if (endMinutes > 24*60) {
+                    alert("Этот слот не подходит по длительности (выходит за пределы дня).");
+                    return;
+                }
+                
+                // Проверяем, что слот всё ещё доступен
+                let stillGreen = isInGreenZone(targetDayObj.dayIndex, startMin) && isInGreenZone(targetDayObj.dayIndex, endMinutes-1);
+                let stillTech = isTechWindow(targetDayObj.dayIndex, startMin, endMinutes);
+                let stillBooked = isBooked(targetDayObj.dayIndex, dateStr, startMin, endMinutes);
+                
+                if (!stillGreen) {
+                    alert("Этот слот не входит в зеленую зону доступности.");
+                    return;
+                }
+                
+                if (stillTech) {
+                    alert("Этот слот занят техническим окном.");
+                    return;
+                }
+                
+                if (stillBooked) {
+                    alert("Этот слот уже кто-то занял.");
+                    renderCalendar();
+                    return;
+                }
+                
+                // Подтверждение записи
+                let confirmMsg = `🎾 Записаться на теннис?\n📅 ${dateStr}\n⏰ ${slotTime} — ${minutesToTime(endMinutes)}\nДлительность: ${defaultDuration} мин`;
+                if (confirm(confirmMsg)) {
+                    let newId = Date.now() + Math.random() * 1000;
+                    bookings.push({
+                        id: newId,
+                        dayIndex: targetDayObj.dayIndex,
+                        dateStr: dateStr,
+                        startMin: startMin,
+                        endMin: endMinutes,
+                        startTime: minutesToTime(startMin),
+                        endTime: minutesToTime(endMinutes)
+                    });
+                    
+                    showToast(`✅ Запись на теннис: ${minutesToTime(startMin)} — ${minutesToTime(endMinutes)}`);
+                    renderCalendar();
+                }
+            }
+        }
+        
+        function renderMyBookings() {
+            const container = document.getElementById('myBookingsList');
+            if (!container) return;
+            if (bookings.length === 0) {
+                container.innerHTML = "🎾 Нет активных записей. Нажми на зеленый слот в календаре.";
+                return;
+            }
+            let html = '';
+            for (let b of bookings) {
+                html += `
+                    <div class="booking-item">
+                        <span>🎾 ${b.dateStr} | ${b.startTime} — ${b.endTime}</span>
+                        <button class="cancel-btn" data-id="${b.id}">Отменить</button>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+            document.querySelectorAll('.cancel-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let id = parseFloat(btn.dataset.id);
+                    cancelBookingById(id);
+                });
+            });
+        }
+        
+        function renderCalendar() {
+            const days = getNext7Days();
+            const container = document.getElementById('calendarWrapper');
+            if (!container) return;
+            
+            let hoursArray = [];
+            for (let h = 0; h < 24; h++) {
+                for (let step = 0; step < (60 / stepMinutes); step++) {
+                    let minute = step * stepMinutes;
+                    let timeVal = h * 60 + minute;
+                    if (timeVal < 24*60) hoursArray.push(timeVal);
+                }
+            }
+            
+            let gridHTML = `<div class="calendar-grid">`;
+            gridHTML += `<div class="time-slot-header">🕒</div>`;
+            for (let d of days) {
+                let shortName = dayNamesFull[d.dayIndex];
+                gridHTML += `<div class="calendar-header">${d.display}<br><span style="font-size:9px;">${shortName}</span></div>`;
+            }
+            
+            for (let timeMin of hoursArray) {
+                let timeShow = minutesToTime(timeMin);
+                gridHTML += `<div class="time-label cell" style="font-weight:600;">${timeShow}</div>`;
+                for (let idx = 0; idx < days.length; idx++) {
+                    let day = days[idx];
+                    let slotsForDay = getAllSlotsForDay(day.date, day.dayIndex, day.dateStr);
+                    let currentSlot = slotsForDay.find(s => s.startMin === timeMin);
+                    if (!currentSlot) {
+                        let nearest = slotsForDay.find(s => Math.abs(s.startMin - timeMin) < stepMinutes/2);
+                        if (!nearest) {
+                            gridHTML += `<div class="cell cell-unavailable">—</div>`;
+                            continue;
+                        } else {
+                            currentSlot = nearest;
+                        }
+                    }
+                    
+                    let cellClass = '';
+                    let innerText = '';
+                    if (currentSlot.status === 'available') {
+                        cellClass = 'cell-available';
+                        innerText = `🎾 ${currentSlot.startTime}`;
+                    } else if (currentSlot.status === 'booked') {
+                        cellClass = 'cell-booked';
+                        innerText = `📅 ${currentSlot.startTime}`;
+                    } else {
+                        cellClass = 'cell-unavailable';
+                        innerText = `❌ ${currentSlot.startTime}`;
+                    }
+                    
+                    gridHTML += `<div class="cell ${cellClass}" 
+                        data-dayidx="${day.dayIndex}" 
+                        data-datestr="${day.dateStr}" 
+                        data-startmin="${currentSlot.startMin}" 
+                        data-status="${currentSlot.status}"
+                        data-slot-time="${currentSlot.startTime}">${innerText}</div>`;
+                }
+            }
+            gridHTML += `</div>`;
+            container.innerHTML = gridHTML;
+            
+            // Вешаем обработчики на ВСЕ ячейки (и зеленые, и синие)
+            document.querySelectorAll('.cell.cell-available, .cell.cell-booked').forEach(cell => {
+                cell.removeEventListener('click', handleCellClick);
+                cell.addEventListener('click', handleCellClick);
+            });
+            
+            renderMyBookings();
+        }
+        
+        function showToast(msg) {
+            let toast = document.getElementById('toastMsg');
+            toast.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+        }
+        
+        // Админка
+        function buildDaysConfigUI() {
+            const container = document.getElementById('daysConfigContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i <= 6; i++) {
+                let sett = daySettings[i];
+                let dayDiv = document.createElement('div');
+                dayDiv.className = 'day-card';
+                dayDiv.innerHTML = `
+                    <strong>${dayNamesFull[i]}</strong>
+                    <label style="display: flex; align-items: center; gap: 6px; margin: 6px 0;">
+                        <input type="checkbox" class="dayActive" data-day="${i}" ${sett.active ? 'checked' : ''}> 
+                        <span>Активен</span>
+                    </label>
+                    <div style="font-size:0.7rem; margin-bottom: 4px;">Зеленая зона:</div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="time" class="greenStart" data-day="${i}" value="${sett.greenStart}" style="width: 95px;"> 
+                        <span>—</span>
+                        <input type="time" class="greenEnd" data-day="${i}" value="${sett.greenEnd}" style="width: 95px;">
+                    </div>
+                `;
+                container.appendChild(dayDiv);
+            }
+            document.querySelectorAll('.dayActive').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    let day = parseInt(e.target.dataset.day);
+                    daySettings[day].active = e.target.checked;
+                    renderCalendar();
+                });
+            });
+            document.querySelectorAll('.greenStart').forEach(inp => {
+                inp.addEventListener('change', (e) => {
+                    let day = parseInt(e.target.dataset.day);
+                    daySettings[day].greenStart = e.target.value;
+                    renderCalendar();
+                });
+            });
+            document.querySelectorAll('.greenEnd').forEach(inp => {
+                inp.addEventListener('change', (e) => {
+                    let day = parseInt(e.target.dataset.day);
+                    daySettings[day].greenEnd = e.target.value;
+                    renderCalendar();
+                });
+            });
+        }
+        
+        function refreshTechWindowsList() {
+            const container = document.getElementById('techWindowsList');
+            if (!container) return;
+            container.innerHTML = '';
+            if (techWindows.length === 0) {
+                container.innerHTML = '<div style="font-size:12px; color:gray;">Нет технических окон</div>';
+            }
+            techWindows.forEach((win, idx) => {
+                let div = document.createElement('div');
+                div.className = 'tech-window-item';
+                div.innerHTML = `
+                    <span>${dayNamesFull[win.dayIndex]} | ${minutesToTime(win.startMin)} — ${minutesToTime(win.endMin)}</span>
+                    <button class="delTechBtn" data-idx="${idx}" style="background:#ef4444; padding:4px 12px;">Удалить</button>
+                `;
+                container.appendChild(div);
+            });
+            document.querySelectorAll('.delTechBtn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    let idx = parseInt(btn.dataset.idx);
+                    techWindows.splice(idx, 1);
+                    refreshTechWindowsList();
+                    renderCalendar();
+                });
+            });
+        }
+        
+        function addTechWindowFromUI() {
+            let dayInput = document.getElementById('newTechDay').value.trim().toUpperCase();
+            let startTime = document.getElementById('newTechStart').value;
+            let endTime = document.getElementById('newTechEnd').value;
+            let dayMap = {'ПН':1, 'ВТ':2, 'СР':3, 'ЧТ':4, 'ПТ':5, 'СБ':6, 'ВС':0};
+            let dayIndex = dayMap[dayInput];
+            if (dayIndex === undefined) {
+                alert("Введите день как ПН, ВТ, СР, ЧТ, ПТ, СБ, ВС");
+                return;
+            }
+            let startMin = timeToMinutes(startTime);
+            let endMin = timeToMinutes(endTime);
+            if (startMin >= endMin) {
+                alert("Начало окна должно быть раньше окончания");
+                return;
+            }
+            techWindows.push({ dayIndex, startMin, endMin });
+            refreshTechWindowsList();
+            renderCalendar();
+            showToast(`✅ Добавлено тех. окно на ${dayInput}`);
+            document.getElementById('newTechDay').value = '';
+        }
+        
+        function init() {
+            buildDaysConfigUI();
+            refreshTechWindowsList();
+            renderCalendar();
+            
+            const themeBtn = document.getElementById('themeToggle');
+            themeBtn.addEventListener('click', () => {
+                if (document.body.classList.contains('light')) {
+                    document.body.classList.remove('light');
+                    document.body.classList.add('dark');
+                    themeBtn.innerText = '☀️ Светлая';
+                } else {
+                    document.body.classList.remove('dark');
+                    document.body.classList.add('light');
+                    themeBtn.innerText = '🌙 Темная';
+                }
+            });
+            
+            const adminBtn = document.getElementById('adminToggle');
+            const adminPanel = document.getElementById('adminPanel');
+            adminBtn.addEventListener('click', () => {
+                adminPanel.classList.toggle('open');
+            });
+            
+            const stepSelect = document.getElementById('stepSelect');
+            const durationSelect = document.getElementById('durationSelect');
+            stepSelect.addEventListener('change', (e) => {
+                stepMinutes = parseInt(e.target.value);
+                renderCalendar();
+            });
+            durationSelect.addEventListener('change', (e) => {
+                defaultDuration = parseInt(e.target.value);
+                renderCalendar();
+            });
+            
+            document.getElementById('addTechWindow')?.addEventListener('click', addTechWindowFromUI);
+            document.getElementById('refreshCalendarBtn')?.addEventListener('click', () => renderCalendar());
+        }
+        
+        init();
+    </script>
+</body>
+</html>
