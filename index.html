@@ -28,6 +28,7 @@
             min-height: 100vh;
             overflow-x: hidden;
             width: 100%;
+            touch-action: pan-y;
         }
 
         /* тёмная тема */
@@ -225,8 +226,11 @@
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
+            overscroll-behavior: none;
             margin-bottom: 20px;
+            touch-action: pan-y;
+            height: auto;
+            max-height: calc(100vh - 350px);
         }
 
         /* карточка слота — всегда 100% ширины */
@@ -350,8 +354,21 @@
                 padding: 14px;
             }
             .card-slot {
-                flex-direction: column;
-                align-items: flex-start;
+                background: var(--card-light);
+                border-radius: var(--border-radius-card);
+                padding: 18px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 14px;
+                box-shadow: var(--shadow);
+                cursor: pointer;
+                border-left: 8px solid;
+                min-height: 130px;
+                width: 100%;
+                transition: 0.1s;
+                touch-action: pan-y pinch-zoom; /* ← ДОБАВИТЬ ЭТУ СТРОКУ */
             }
             .players-info {
                 width: 100%;
