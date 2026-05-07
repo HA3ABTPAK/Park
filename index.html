@@ -814,5 +814,40 @@
             });
         }
     </script>
+    <script>
+    // ========== АВТООБНОВЛЕНИЕ SERVICE WORKER ==========
+    if ('serviceWorker' in navigator) {
+        // Функция для уведомлений через toast
+        function notifyUpdate(msg) {
+            if (typeof showToast === 'function') {
+                showToast(msg, 2000);
+            } else {
+                console.log(msg);
+            }
+        }
+        
+        // Регистрация SW
+        navigator.serviceWorker.register('sw.js')
+            .then(registration => {
+                console.log('✅ SW registered');
+                registration.update();
+                
+                // Проверка каждые 60 секунд
+                setInterval(() => {
+                    registration.update();
+                    console.log('🔄 Checking for updates...');
+                }, 60000);
+            })
+            .catch(err => console.log('❌ SW error:', err));
+        
+        // При активации нового SW - перезагружаем страницу
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('🔄 New version detected, reloading...');
+            notifyUpdate('🔄 Новая версия! Обновляем...');
+            setTimeout(() => window.location.reload(), 1500);
+        });
+    }
+    // ========== КОНЕЦ БЛОКА ==========
+</script>
 </body>
 </html>
