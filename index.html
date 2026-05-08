@@ -810,6 +810,25 @@
                     renderMyBookings();
                     showToast("Календарь обновлён", 1000);
                 });
+                
+                // ========== НОВЫЙ КОД ==========
+                // Управление скрытием/показом блока "Мои записи"
+                const myBookingsSection = document.getElementById('myBookingsSection');
+                const myBookingsToggleBtn = document.getElementById('myBookingsToggleBtn');
+                let isBookingsVisible = true; // по умолчанию виден
+                
+                if (myBookingsToggleBtn && myBookingsSection) {
+                    myBookingsToggleBtn.addEventListener('click', () => {
+                        if (isBookingsVisible) {
+                            myBookingsSection.classList.add('hidden');
+                            isBookingsVisible = false;
+                        } else {
+                            myBookingsSection.classList.remove('hidden');
+                            isBookingsVisible = true;
+                        }
+                    });
+                }
+                // ========== КОНЕЦ НОВОГО КОДА ==========
             }
             
             init();
