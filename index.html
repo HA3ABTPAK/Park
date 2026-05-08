@@ -824,7 +824,18 @@ function renderMyBookings() {
                 // Управление скрытием/показом блока "Мои записи"
                 const myBookingsSection = document.getElementById('myBookingsSection');
                 const myBookingsToggleBtn = document.getElementById('myBookingsToggleBtn');
-                let isBookingsVisible = true; // по умолчанию виден
+                const slotsContainer = document.getElementById('slotsContainer');
+                let isBookingsVisible = true;
+                
+                // Функция для принудительного пересчета высоты списка
+                function refreshSlotsHeight() {
+                    if (!slotsContainer) return;
+                    // Временное решение: заставляем браузер пересчитать layout
+                    slotsContainer.style.transform = 'translateZ(0)';
+                    setTimeout(() => {
+                        slotsContainer.style.transform = '';
+                    }, 50);
+                }
                 
                 if (myBookingsToggleBtn && myBookingsSection) {
                     myBookingsToggleBtn.addEventListener('click', () => {
@@ -835,6 +846,11 @@ function renderMyBookings() {
                             myBookingsSection.classList.remove('hidden');
                             isBookingsVisible = true;
                         }
+                        // После изменения видимости — обновляем высоту списка
+                        setTimeout(() => {
+                            refreshSlotsHeight();
+                            window.dispatchEvent(new Event('resize'));
+                        }, 50);
                     });
                 }
                 // ========== КОНЕЦ НОВОГО КОДА ==========
