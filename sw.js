@@ -1,4 +1,4 @@
-const APP_VERSION = '2026_05_07_01';
+const APP_VERSION = '2026_05_08_01';
 const CACHE_NAME = `tennis-calendar-${APP_VERSION}`;
 const urlsToCache = [
   '.',
