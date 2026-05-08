@@ -673,38 +673,46 @@
                 return false;
             }
             
-            function renderMyBookings() {
-                const container = document.getElementById('myBookingsList');
-                if (!container) return;
-                if (bookings.length === 0) {
-                    container.innerHTML = '<div style="padding: 12px; text-align:center;">🎾 Нет активных записей. Нажмите на карточку.</div>';
-                    return;
-                }
-                let sorted = [...bookings].sort((a,b) => {
-                    if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
-                    return a.startMin - b.startMin;
-                });
-                let html = '';
-                for (let b of sorted) {
-                    let week = getNext7Days();
-                    let dayMatch = week.find(d => d.dateStr === b.dateStr);
-                    let niceDate = dayMatch ? dayMatch.displayDate : b.dateStr;
-                    html += `
-                        <div class="booking-item-mini">
-                            <span><strong>🎾 ${niceDate}</strong>  ${b.startTime} — ${b.endTime}</span>
-                            <button class="cancel-mini" data-id="${b.id}">Отменить</button>
-                        </div>
-                    `;
-                }
-                container.innerHTML = html;
-                document.querySelectorAll('.cancel-mini').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        let id = parseFloat(btn.dataset.id);
-                        cancelBookingById(id);
-                    });
-                });
-            }
+function renderMyBookings() {
+    const container = document.getElementById('myBookingsList');
+    if (!container) return;
+    
+    // ===== ОБНОВЛЯЕМ СЧЕТЧИК НА КНОПКЕ =====
+    const bookingsCountBadge = document.getElementById('bookingsCountBadge');
+    if (bookingsCountBadge) {
+        bookingsCountBadge.textContent = bookings.length;
+    }
+    // =======================================
+    
+    if (bookings.length === 0) {
+        container.innerHTML = '<div style="padding: 12px; text-align:center;">🎾 Нет активных записей. Нажмите на карточку.</div>';
+        return;
+    }
+    let sorted = [...bookings].sort((a,b) => {
+        if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
+        return a.startMin - b.startMin;
+    });
+    let html = '';
+    for (let b of sorted) {
+        let week = getNext7Days();
+        let dayMatch = week.find(d => d.dateStr === b.dateStr);
+        let niceDate = dayMatch ? dayMatch.displayDate : b.dateStr;
+        html += `
+            <div class="booking-item-mini">
+                <span><strong>🎾 ${niceDate}</strong>  ${b.startTime} — ${b.endTime}</span>
+                <button class="cancel-mini" data-id="${b.id}">Отменить</button>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+    document.querySelectorAll('.cancel-mini').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let id = parseFloat(btn.dataset.id);
+            cancelBookingById(id);
+        });
+    });
+}
             
             function showToast(msg, duration = 1800) {
                 let toast = document.getElementById('toastMsg');
