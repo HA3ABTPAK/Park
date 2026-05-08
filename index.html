@@ -391,6 +391,15 @@
                 padding: 6px 14px;
             }
         }
+                    /* Анимация для скрытия/показа блока записей */
+        .my-bookings-section {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .my-bookings-section.hidden {
+            display: none !important;
+        }
     </style>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
