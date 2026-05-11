@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tennis-calendar-v5';
+const CACHE_NAME = 'tennis-calendar-v6';
 
 const urlsToCache = [
   '.',
